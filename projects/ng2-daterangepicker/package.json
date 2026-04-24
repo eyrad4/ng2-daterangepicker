@@ -1,14 +1,14 @@
 {
-  "name": "ng2-daterangepicker",
+  "name": "@eyrad4/ng2-daterangepicker",
   "version": "5.0.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/evansmwendwa/ng2-daterangepicker"
+    "url": "git+https://github.com/eyrad4/ng2-daterangepicker"
   },
   "bugs": {
-    "url": "https://github.com/evansmwendwa/ng2-daterangepicker/issues"
+    "url": "https://github.com/eyrad4/ng2-daterangepicker/issues"
   },
-  "homepage": "https://github.com/evansmwendwa/ng2-daterangepicker#readme",
+  "homepage": "https://github.com/eyrad4/ng2-daterangepicker#readme",
   "license": "MIT",
   "peerDependencies": {
     "@angular/common": "^20.0.0",

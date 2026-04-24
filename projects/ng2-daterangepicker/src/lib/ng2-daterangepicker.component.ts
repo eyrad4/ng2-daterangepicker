@@ -48,6 +48,8 @@ export class DaterangepickerComponent implements AfterViewInit, OnDestroy {
 
   showDaterangepicker = output<PickerOutputEvent>();
 
+  renderDaterangepicker = output<void>();
+
   public datePicker: DateRangePicker | null = null;
 
   constructor() {
@@ -106,6 +108,8 @@ export class DaterangepickerComponent implements AfterViewInit, OnDestroy {
         this.datePicker.container.classList.add(customClass);
       }
     }
+
+    this.renderDaterangepicker.emit();
   }
 
   private onPickerSelect(start?: Moment, end?: Moment, label?: string): void {

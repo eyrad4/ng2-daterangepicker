@@ -20,6 +20,7 @@ import { DateRangePicker } from './picker/daterangepicker';
       (showCalendarDaterangepicker)="lastShowCalendar = $event"
       (hideDaterangepicker)="lastHide = $event"
       (showDaterangepicker)="lastShow = $event"
+      (renderDaterangepicker)="renderCount = renderCount + 1"
     />
   `
 })
@@ -32,6 +33,7 @@ class HostComponent {
   lastShowCalendar: any;
   lastHide: any;
   lastShow: any;
+  renderCount = 0;
   @ViewChild(DaterangepickerComponent) directive!: DaterangepickerComponent;
 }
 
@@ -144,6 +146,17 @@ describe('DaterangepickerComponent (directive)', () => {
     const instance = DateRangePicker.getInstance(inputEl(fixture))!;
     expect(instance.locale.format).toBe('YYYY-MM-DD');
     expect(instance.autoApply).toBe(true);
+  }));
+
+  it('emits renderDaterangepicker after initial render and re-render', fakeAsync(() => {
+    fixture.detectChanges();
+    tick();
+    expect(host.renderCount).toBe(1);
+
+    host.options = { locale: { format: 'DD/MM/YYYY' } };
+    fixture.detectChanges();
+    tick();
+    expect(host.renderCount).toBe(2);
   }));
 
   it('removes the picker container from the DOM on destroy', () => {
