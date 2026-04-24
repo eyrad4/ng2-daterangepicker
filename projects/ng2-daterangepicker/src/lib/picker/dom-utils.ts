@@ -3,7 +3,7 @@ export type Cleanup = () => void;
 export function on<K extends keyof HTMLElementEventMap>(
   el: EventTarget,
   type: K | string,
-  handler: (e: any) => void,
+  handler: (e: Event) => void,
   options?: AddEventListenerOptions | boolean
 ): Cleanup {
   el.addEventListener(type, handler as EventListener, options);
@@ -28,7 +28,7 @@ export function delegate(
   return () => parent.removeEventListener(type, wrapped);
 }
 
-export function trigger(el: EventTarget, type: string, detail?: any): boolean {
+export function trigger(el: EventTarget, type: string, detail?: Record<string, unknown>): boolean {
   return el.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, cancelable: true }));
 }
 
@@ -38,17 +38,17 @@ export function fromHTML(html: string): HTMLElement {
   return tpl.content.firstElementChild as HTMLElement;
 }
 
-export function isPlainObject(value: any): boolean {
+export function isPlainObject(value: unknown): boolean {
   if (value === null || typeof value !== 'object') { return false; }
   const proto = Object.getPrototypeOf(value);
   return proto === null || proto === Object.prototype;
 }
 
-export function deepMerge<T>(target: T, ...sources: any[]): T {
+export function deepMerge<T>(target: T, ...sources: unknown[]): T {
   for (const source of sources) {
     if (!isPlainObject(source)) { continue; }
-    for (const key of Object.keys(source)) {
-      const srcVal = (source as any)[key];
+    for (const key of Object.keys(source as object)) {
+      const srcVal = (source as Record<string, unknown>)[key];
       const tgtVal = (target as any)[key];
       if (isPlainObject(srcVal) && isPlainObject(tgtVal)) {
         deepMerge(tgtVal, srcVal);
@@ -62,8 +62,8 @@ export function deepMerge<T>(target: T, ...sources: any[]): T {
   return target;
 }
 
-export function readDataAttrs(el: Element): Record<string, any> {
-  const out: Record<string, any> = {};
+export function readDataAttrs(el: Element): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
   if (!(el as HTMLElement).dataset) { return out; }
   const ds = (el as HTMLElement).dataset;
   for (const key of Object.keys(ds)) {
@@ -73,7 +73,7 @@ export function readDataAttrs(el: Element): Record<string, any> {
   return out;
 }
 
-function coerceDataValue(raw: string): any {
+function coerceDataValue(raw: string): string | number | boolean | null {
   if (raw === 'true') { return true; }
   if (raw === 'false') { return false; }
   if (raw === 'null') { return null; }

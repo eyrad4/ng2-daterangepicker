@@ -7,17 +7,17 @@ describe('DaterangepickerConfig', () => {
     TestBed.configureTestingModule({});
   });
 
-  it('exposes an empty settings object on construction', () => {
+  it('exposes an empty settings signal on construction', () => {
     const service = TestBed.inject(DaterangepickerConfig);
-    expect(service.settings).toEqual({});
+    expect(service.settings()).toEqual({});
   });
 
   it('is a singleton: mutations persist across re-injections', () => {
     const first = TestBed.inject(DaterangepickerConfig);
-    first.settings = { locale: { format: 'DD/MM/YYYY' } };
+    first.setSettings({ locale: { format: 'DD/MM/YYYY' } });
 
     const second = TestBed.inject(DaterangepickerConfig);
     expect(second).toBe(first);
-    expect(second.settings.locale.format).toBe('DD/MM/YYYY');
+    expect(second.settings().locale!.format).toBe('DD/MM/YYYY');
   });
 });

@@ -2,124 +2,158 @@ import {
   Directive,
   AfterViewInit,
   OnDestroy,
-  DoCheck,
-  Input,
-  Output,
-  EventEmitter,
   ElementRef,
-  KeyValueDiffers
-} from '@angular/core';
-import { DateRangePicker } from './vendor/daterangepicker';
-import { Cleanup, on } from './vendor/dom-utils';
-import { DaterangepickerConfig } from './ng2-daterangepicker.service';
+  inject,
+  input,
+  output,
+  effect,
+  signal,
+  untracked,
+} from "@angular/core";
+import type { Moment } from "moment";
+import { DateRangePicker } from "./picker/daterangepicker";
+import { Cleanup, on } from "./picker/dom-utils";
+import { DaterangepickerConfig } from "./ng2-daterangepicker.service";
+import type { DateRangePickerOptions, PickerOutputEvent } from "./picker/types";
 
 @Directive({
-  selector: '[daterangepicker]',
-  standalone: true
+  selector: "[daterangepicker]",
+  standalone: true,
 })
-export class DaterangepickerComponent implements AfterViewInit, OnDestroy, DoCheck {
+export class DaterangepickerComponent implements AfterViewInit, OnDestroy {
+  private activeRange: { start: Moment; end: Moment; label?: string } | null =
+    null;
 
-  private activeRange: any;
-  private targetOptions: any = {};
-  private _differ: any = {};
   private eventCleanups: Cleanup[] = [];
+
+  private viewInitialized = signal(false);
+
+  private readonly el = inject(ElementRef<HTMLElement>);
+
+  private readonly config = inject(DaterangepickerConfig);
+
+  options = input<DateRangePickerOptions>({});
+
+  selected = output<{ start: Moment; end: Moment; label?: string }>();
+
+  cancelDaterangepicker = output<PickerOutputEvent>();
+
+  applyDaterangepicker = output<PickerOutputEvent>();
+
+  hideCalendarDaterangepicker = output<PickerOutputEvent>();
+
+  showCalendarDaterangepicker = output<PickerOutputEvent>();
+
+  hideDaterangepicker = output<PickerOutputEvent>();
+
+  showDaterangepicker = output<PickerOutputEvent>();
 
   public datePicker: DateRangePicker | null = null;
 
-  @Input() options: any = {};
-
-  @Output() selected = new EventEmitter();
-  @Output() cancelDaterangepicker = new EventEmitter();
-  @Output() applyDaterangepicker = new EventEmitter();
-  @Output() hideCalendarDaterangepicker = new EventEmitter();
-  @Output() showCalendarDaterangepicker = new EventEmitter();
-  @Output() hideDaterangepicker = new EventEmitter();
-  @Output() showDaterangepicker = new EventEmitter();
-
-  constructor(
-    private input: ElementRef,
-    private config: DaterangepickerConfig,
-    private differs: KeyValueDiffers
-  ) {
-    this._differ['options'] = this.differs.find(this.options).create();
-    this._differ['settings'] = this.differs.find(this.config.settings).create();
+  constructor() {
+    effect(() => {
+      if (!this.viewInitialized()) return;
+      const opts = this.options();
+      const settings = this.config.settings();
+      untracked(() => {
+        this.render(opts, settings);
+        this.attachEvents();
+        if (this.activeRange && this.datePicker) {
+          this.datePicker.setStartDate(this.activeRange.start);
+          this.datePicker.setEndDate(this.activeRange.end);
+        }
+      });
+    });
   }
 
-  ngAfterViewInit() {
-    this.render();
+  ngAfterViewInit(): void {
+    this.viewInitialized.set(true);
+  }
+
+  updateOptions(partial: Partial<DateRangePickerOptions>): void {
+    const opts = Object.assign({}, this.options(), partial);
+    this.render(opts, this.config.settings());
     this.attachEvents();
-  }
-
-  ngDoCheck() {
-    const optionsChanged = this._differ['options'].diff(this.options);
-    const settingsChanged = this._differ['settings'].diff(this.config.settings);
-
-    if (optionsChanged || settingsChanged) {
-      this.render();
-      this.attachEvents();
-      if (this.activeRange && this.datePicker) {
-        this.datePicker.setStartDate(this.activeRange.start);
-        this.datePicker.setEndDate(this.activeRange.end);
-      }
+    if (this.activeRange && this.datePicker) {
+      this.datePicker.setStartDate(this.activeRange.start);
+      this.datePicker.setEndDate(this.activeRange.end);
     }
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.destroyPicker();
   }
 
-  private render(): void {
-    this.targetOptions = Object.assign({}, this.config.settings, this.options);
-
-    // Replace any existing instance before creating a new one
+  private render(
+    opts: DateRangePickerOptions,
+    settings: DateRangePickerOptions,
+  ): void {
+    const targetOptions = Object.assign({}, settings, opts);
     this.destroyPicker();
 
     this.datePicker = new DateRangePicker(
-      this.input.nativeElement,
-      this.targetOptions,
-      this.callback.bind(this)
+      this.el.nativeElement,
+      targetOptions,
+      (start: Moment, end: Moment, label?: string) =>
+        this.onPickerSelect(start, end, label),
     );
 
-    if (this.options.customClasses && this.options.customClasses.length) {
-      const classes: string[] = Array.isArray(this.options.customClasses)
-        ? this.options.customClasses
-        : [this.options.customClasses];
+    if (opts.customClasses?.length) {
+      const classes: string[] = Array.isArray(opts.customClasses)
+        ? opts.customClasses
+        : [opts.customClasses];
       for (const customClass of classes) {
         this.datePicker.container.classList.add(customClass);
       }
     }
   }
 
-  private callback(start?: any, end?: any, label?: any): void {
-    this.activeRange = { start, end, label };
+  private onPickerSelect(start?: Moment, end?: Moment, label?: string): void {
+    this.activeRange = { start: start as Moment, end: end as Moment, label };
     this.selected.emit(this.activeRange);
   }
 
   private destroyPicker(): void {
-    this.eventCleanups.forEach((c) => { c(); });
+    this.eventCleanups.forEach((c) => {
+      c();
+    });
     this.eventCleanups = [];
     if (this.datePicker) {
-      try { this.datePicker.remove(); } catch (e) { /* picker may already be detached */ }
+      try {
+        this.datePicker.remove();
+      } catch (_e) {
+        /* already detached */
+      }
       this.datePicker = null;
     }
   }
 
   private attachEvents(): void {
-    this.eventCleanups.forEach((c) => { c(); });
+    this.eventCleanups.forEach((c) => {
+      c();
+    });
     this.eventCleanups = [];
 
-    const el: HTMLElement = this.input.nativeElement;
-    const wire = (eventName: string, sink: EventEmitter<any>) => {
-      this.eventCleanups.push(on(el, eventName, (e: CustomEvent) => {
-        sink.emit({ event: e, picker: e.detail?.picker });
-      }));
+    const el: HTMLElement = this.el.nativeElement;
+    const wire = (
+      eventName: string,
+      sink: ReturnType<typeof output<PickerOutputEvent>>,
+    ) => {
+      this.eventCleanups.push(
+        on(el, eventName, (e: Event) => {
+          sink.emit({
+            event: e as CustomEvent,
+            picker: (e as CustomEvent).detail?.picker,
+          });
+        }),
+      );
     };
 
-    wire('cancel.daterangepicker', this.cancelDaterangepicker);
-    wire('apply.daterangepicker', this.applyDaterangepicker);
-    wire('hideCalendar.daterangepicker', this.hideCalendarDaterangepicker);
-    wire('showCalendar.daterangepicker', this.showCalendarDaterangepicker);
-    wire('hide.daterangepicker', this.hideDaterangepicker);
-    wire('show.daterangepicker', this.showDaterangepicker);
+    wire("cancel.daterangepicker", this.cancelDaterangepicker);
+    wire("apply.daterangepicker", this.applyDaterangepicker);
+    wire("hideCalendar.daterangepicker", this.hideCalendarDaterangepicker);
+    wire("showCalendar.daterangepicker", this.showCalendarDaterangepicker);
+    wire("hide.daterangepicker", this.hideDaterangepicker);
+    wire("show.daterangepicker", this.showDaterangepicker);
   }
 }

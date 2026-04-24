@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angul
 
 import { DaterangepickerComponent } from './ng2-daterangepicker.component';
 import { DaterangepickerConfig } from './ng2-daterangepicker.service';
-import { DateRangePicker } from './vendor/daterangepicker';
+import { DateRangePicker } from './picker/daterangepicker';
 
 @Component({
   standalone: true,
@@ -56,7 +56,7 @@ describe('DaterangepickerComponent (directive)', () => {
 
   beforeEach(() => {
     config = TestBed.inject(DaterangepickerConfig);
-    config.settings = {};
+    config.setSettings({});
     fixture = TestBed.createComponent(HostComponent);
     host = fixture.componentInstance;
     document.body.appendChild(fixture.nativeElement);
@@ -75,7 +75,7 @@ describe('DaterangepickerComponent (directive)', () => {
   });
 
   it('merges DaterangepickerConfig.settings with directive options (options win)', () => {
-    config.settings = { locale: { format: 'YYYY/MM/DD' }, autoApply: true };
+    config.setSettings({ locale: { format: 'YYYY/MM/DD' }, autoApply: true });
     host.options = { locale: { format: 'DD-MM-YYYY' } };
     fixture.detectChanges();
 
@@ -88,7 +88,7 @@ describe('DaterangepickerComponent (directive)', () => {
     fixture.detectChanges();
     const start = { tag: 'start' };
     const end = { tag: 'end' };
-    (host.directive as any).callback(start, end, 'Custom Range');
+    (host.directive as any).onPickerSelect(start, end, 'Custom Range');
     expect(host.lastSelected).toEqual({ start, end, label: 'Custom Range' });
   });
 
@@ -133,6 +133,17 @@ describe('DaterangepickerComponent (directive)', () => {
     tick();
     instance = DateRangePicker.getInstance(inputEl(fixture))!;
     expect(instance.locale.format).toBe('DD/MM/YYYY');
+  }));
+
+  it('updateOptions() re-renders with merged partial options', fakeAsync(() => {
+    host.options = { locale: { format: 'YYYY-MM-DD' } };
+    fixture.detectChanges();
+    tick();
+
+    host.directive.updateOptions({ autoApply: true });
+    const instance = DateRangePicker.getInstance(inputEl(fixture))!;
+    expect(instance.locale.format).toBe('YYYY-MM-DD');
+    expect(instance.autoApply).toBe(true);
   }));
 
   it('removes the picker container from the DOM on destroy', () => {
