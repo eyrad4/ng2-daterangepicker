@@ -14,7 +14,8 @@ import { Cleanup, on } from './vendor/dom-utils';
 import { DaterangepickerConfig } from './ng2-daterangepicker.service';
 
 @Directive({
-  selector: '[daterangepicker]'
+  selector: '[daterangepicker]',
+  standalone: true
 })
 export class DaterangepickerComponent implements AfterViewInit, OnDestroy, DoCheck {
 

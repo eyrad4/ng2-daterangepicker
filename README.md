@@ -3,11 +3,13 @@ ng2-daterangepicker
 
 ![Daterange Picker](https://raw.githubusercontent.com/evansmwendwa/ng2-daterangepicker/master/projects/ng2-daterangepicker/assets/screen-shot.png)
 
-This library was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.0.1.
+This library targets Angular 20+. It ships a standalone directive (`DaterangepickerComponent`) and the vendored date-range picker source as a jQuery-free TypeScript class (`DateRangePicker`). Moment.js stays as the only runtime peer dependency.
 
-## Version 3.0.0 adds support for Angular 9.0 Ivy compiler
+## Version history
 
-I have not made efforts to test earlier versions of angular with version 3.x of this package but it should still work.
+- **5.0.0** — Angular 9 → 20 upgrade. Standalone directive; `@angular/build:application` (esbuild) builder; `ng-packagr` 20; ESLint-ready. The `Daterangepicker` NgModule was removed — import `DaterangepickerComponent` directly.
+- **4.0.0** — jQuery removed. Vendored picker rewritten in TypeScript with native DOM APIs and `CustomEvent`. `moment` is the only runtime peer.
+- **3.x** — Angular 9 support, last jQuery-based release.
 
 ### Installation
 
@@ -49,16 +51,30 @@ requires jQuery — only Moment.js as a peer dependency.
 }
 ```
 
-### Import Daterangepicker Module
-Import the `Daterangepicker` module in your application module
+### Import the standalone directive
 
-``` javascript
-import { Daterangepicker } from 'ng2-daterangepicker';
+Import `DaterangepickerComponent` directly into your standalone component's `imports` array:
 
-@NgModule({
-    imports: [Daterangepicker]
+```ts
+import { Component } from '@angular/core';
+import { DaterangepickerComponent } from 'ng2-daterangepicker';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [DaterangepickerComponent],
+  templateUrl: './app.component.html'
 })
+export class AppComponent {}
+```
 
+For NgModule-based apps (if you still have any), standalone directives are usable in `imports: []`:
+
+```ts
+@NgModule({
+  imports: [DaterangepickerComponent]
+})
+export class AppModule {}
 ```
 
 Use the `daterangepicker` directive in your component by passing in options `{}` and consuming the `selected` event. Directive can be added to inputs, buttons or any other html element.

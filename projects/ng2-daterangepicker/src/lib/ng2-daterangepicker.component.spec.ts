@@ -1,11 +1,13 @@
 import { Component, ViewChild } from '@angular/core';
-import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
 
 import { DaterangepickerComponent } from './ng2-daterangepicker.component';
 import { DaterangepickerConfig } from './ng2-daterangepicker.service';
 import { DateRangePicker } from './vendor/daterangepicker';
 
 @Component({
+  standalone: true,
+  imports: [DaterangepickerComponent],
   template: `
     <input
       type="text"
@@ -46,9 +48,9 @@ describe('DaterangepickerComponent (directive)', () => {
   let host: HostComponent;
   let config: DaterangepickerConfig;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [DaterangepickerComponent, HostComponent]
+      imports: [DaterangepickerComponent, HostComponent]
     }).compileComponents();
   }));
 
