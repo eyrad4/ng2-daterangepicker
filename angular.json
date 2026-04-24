@@ -26,9 +26,7 @@
             "styles": [
               "src/styles.css"
             ],
-            "scripts": [
-              "node_modules/jquery/dist/jquery.min.js"
-            ]
+            "scripts": []
           },
           "configurations": {
             "production": {
@@ -145,7 +143,8 @@
           "options": {
             "main": "projects/ng2-daterangepicker/src/test.ts",
             "tsConfig": "projects/ng2-daterangepicker/tsconfig.spec.json",
-            "karmaConfig": "projects/ng2-daterangepicker/karma.conf.js"
+            "karmaConfig": "projects/ng2-daterangepicker/karma.conf.js",
+            "styles": ["projects/ng2-daterangepicker/assets/daterangepicker.css"]
           }
         },
         "lint": {

@@ -6,8 +6,5 @@
   },
   "assets": [
     "assets/**/*"
-  ],
-  "whitelistedNonPeerDependencies": [
-    "daterangepicker"
   ]
 }

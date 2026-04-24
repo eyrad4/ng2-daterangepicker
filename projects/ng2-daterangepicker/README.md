@@ -24,8 +24,7 @@ Please note and install the following peerDependencies if necessary for your set
 
 ```json
 "peerDependencies": {
-"@types/jquery": "^3.2.12",
-"jquery": "^3.2.1",
+  "moment": "^2.24.0"
 }
 ```
 
@@ -39,17 +38,13 @@ Update tsconfig.json file in your project root to allow syntectic default import
 
 ### Usage
 
-Add JQuery and the custom css stylesheet to `angular.json`. You can customize the stylesheet as you want.
-
-Latest version does not require Bootstrap. You can also skip this and copy the contents of the css file to your stylesheets for customizations.
+Add the daterangepicker stylesheet to `angular.json`. The library no longer
+requires jQuery — only Moment.js as a peer dependency.
 
 ```json
 {
   "styles": [
     "node_modules/ng2-daterangepicker/assets/daterangepicker.css"
-  ],
-  "scripts": [
-    "node_modules/jquery/dist/jquery.min.js"
   ]
 }
 ```
@@ -216,10 +211,8 @@ export class AppComponent {
 
 Notes
 -----
-* This component was made in the early days of transitioning from JQuery to Angular 2.0 You might want to consider using more modern alternatives
-* Though this package still uses JQuery and Bootstrap it has been updated to support Angular 9 in 2020 (I have not made efforts to test earlier versions of Angular with version 3.0)
-* If your project is not using JQuery for other features this date picker might not be the best option for your project
-* This package ports the original [Daterangepicker](http://www.daterangepicker.com) by [Dan Grossman](https://github.com/dangrossman) for use in Angular. Angular 9 support starts with `Version 3.x` of this package
+* This package ports the original [Daterangepicker](http://www.daterangepicker.com) by [Dan Grossman](https://github.com/dangrossman) for use in Angular. The picker source is vendored under `src/lib/vendor/` and has been rewritten in TypeScript with native DOM APIs — jQuery is no longer required. Moment.js is still used for date math.
+* Angular 9 support starts with `Version 3.x` of this package.
 
 Contributing
 ------------

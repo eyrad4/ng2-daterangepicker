@@ -9,9 +9,9 @@ import {
   ElementRef,
   KeyValueDiffers
 } from '@angular/core';
-import 'daterangepicker';
-import $ from "jquery";
-import { DaterangepickerConfig } from "./ng2-daterangepicker.service";
+import { DateRangePicker } from './vendor/daterangepicker';
+import { Cleanup, on } from './vendor/dom-utils';
+import { DaterangepickerConfig } from './ng2-daterangepicker.service';
 
 @Directive({
   selector: '[daterangepicker]'
@@ -21,8 +21,9 @@ export class DaterangepickerComponent implements AfterViewInit, OnDestroy, DoChe
   private activeRange: any;
   private targetOptions: any = {};
   private _differ: any = {};
+  private eventCleanups: Cleanup[] = [];
 
-  public datePicker: any;
+  public datePicker: DateRangePicker | null = null;
 
   @Input() options: any = {};
 
@@ -49,8 +50,8 @@ export class DaterangepickerComponent implements AfterViewInit, OnDestroy, DoChe
   }
 
   ngDoCheck() {
-    let optionsChanged = this._differ['options'].diff(this.options);
-    let settingsChanged = this._differ['settings'].diff(this.config.settings);
+    const optionsChanged = this._differ['options'].diff(this.options);
+    const settingsChanged = this._differ['settings'].diff(this.config.settings);
 
     if (optionsChanged || settingsChanged) {
       this.render();
@@ -69,84 +70,55 @@ export class DaterangepickerComponent implements AfterViewInit, OnDestroy, DoChe
   private render(): void {
     this.targetOptions = Object.assign({}, this.config.settings, this.options);
 
-    (<any>$(this.input.nativeElement)).daterangepicker(
+    // Replace any existing instance before creating a new one
+    this.destroyPicker();
+
+    this.datePicker = new DateRangePicker(
+      this.input.nativeElement,
       this.targetOptions,
       this.callback.bind(this)
     );
 
     if (this.options.customClasses && this.options.customClasses.length) {
-      for (let customClass of this.options.customClasses) {
-        this.datePicker = (
-          <any>$(this.input.nativeElement)
-        ).data('daterangepicker').container.addClass(customClass);
+      const classes: string[] = Array.isArray(this.options.customClasses)
+        ? this.options.customClasses
+        : [this.options.customClasses];
+      for (const customClass of classes) {
+        this.datePicker.container.classList.add(customClass);
       }
-    } else {
-      this.datePicker = (
-        <any>$(this.input.nativeElement)
-      ).data('daterangepicker');
     }
   }
 
   private callback(start?: any, end?: any, label?: any): void {
-    this.activeRange = {
-      start: start,
-      end: end,
-      label: label
-    }
-
+    this.activeRange = { start, end, label };
     this.selected.emit(this.activeRange);
   }
 
   private destroyPicker(): void {
-    try {
-      $(this.input.nativeElement).data('daterangepicker').remove();
-    } catch (e) {
-      console.log(e.message);
+    this.eventCleanups.forEach((c) => { c(); });
+    this.eventCleanups = [];
+    if (this.datePicker) {
+      try { this.datePicker.remove(); } catch (e) { /* picker may already be detached */ }
+      this.datePicker = null;
     }
   }
 
   private attachEvents(): void {
-    $(this.input.nativeElement).on('cancel.daterangepicker',
-      (e: any, picker: any) => {
-        let event = { event: e, picker: picker };
-        this.cancelDaterangepicker.emit(event);
-      }
-    );
+    this.eventCleanups.forEach((c) => { c(); });
+    this.eventCleanups = [];
 
-    $(this.input.nativeElement).on('apply.daterangepicker',
-      (e: any, picker: any) => {
-        let event = { event: e, picker: picker };
-        this.applyDaterangepicker.emit(event);
-      }
-    );
+    const el: HTMLElement = this.input.nativeElement;
+    const wire = (eventName: string, sink: EventEmitter<any>) => {
+      this.eventCleanups.push(on(el, eventName, (e: CustomEvent) => {
+        sink.emit({ event: e, picker: e.detail?.picker });
+      }));
+    };
 
-    $(this.input.nativeElement).on('hideCalendar.daterangepicker',
-      (e: any, picker: any) => {
-        let event = { event: e, picker: picker };
-        this.hideCalendarDaterangepicker.emit(event);
-      }
-    );
-
-    $(this.input.nativeElement).on('showCalendar.daterangepicker',
-      (e: any, picker: any) => {
-        let event = { event: e, picker: picker };
-        this.showCalendarDaterangepicker.emit(event);
-      }
-    );
-
-    $(this.input.nativeElement).on('hide.daterangepicker',
-      (e: any, picker: any) => {
-        let event = { event: e, picker: picker };
-        this.hideDaterangepicker.emit(event);
-      }
-    );
-
-    $(this.input.nativeElement).on('show.daterangepicker',
-      (e: any, picker: any) => {
-        let event = { event: e, picker: picker };
-        this.showDaterangepicker.emit(event);
-      }
-    );
+    wire('cancel.daterangepicker', this.cancelDaterangepicker);
+    wire('apply.daterangepicker', this.applyDaterangepicker);
+    wire('hideCalendar.daterangepicker', this.hideCalendarDaterangepicker);
+    wire('showCalendar.daterangepicker', this.showCalendarDaterangepicker);
+    wire('hide.daterangepicker', this.hideDaterangepicker);
+    wire('show.daterangepicker', this.showDaterangepicker);
   }
-
 }
