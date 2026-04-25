@@ -159,6 +159,62 @@ describe('DaterangepickerComponent (directive)', () => {
     expect(host.renderCount).toBe(2);
   }));
 
+  it('updateOptions() with only startDate/endDate keeps the same picker instance', fakeAsync(() => {
+    host.options = { locale: { format: 'YYYY-MM-DD' } };
+    fixture.detectChanges();
+    tick();
+
+    const before = DateRangePicker.getInstance(inputEl(fixture));
+    host.directive.updateOptions({
+      startDate: '2024-01-01',
+      endDate: '2024-01-31'
+    });
+    const after = DateRangePicker.getInstance(inputEl(fixture));
+
+    expect(after).toBe(before);
+    expect(after!.startDate.format('YYYY-MM-DD')).toBe('2024-01-01');
+    expect(after!.endDate.format('YYYY-MM-DD')).toBe('2024-01-31');
+  }));
+
+  it('updateOptions() with non-date keys still rebuilds the picker', fakeAsync(() => {
+    fixture.detectChanges();
+    tick();
+
+    const before = DateRangePicker.getInstance(inputEl(fixture));
+    host.directive.updateOptions({ autoApply: true });
+    const after = DateRangePicker.getInstance(inputEl(fixture));
+
+    expect(after).not.toBe(before);
+    expect(after!.autoApply).toBe(true);
+  }));
+
+  it('updateOptions() with full options object only rebuilds when non-date values change', fakeAsync(() => {
+    host.options = {
+      locale: { format: 'YYYY-MM-DD' },
+      opens: 'left',
+      autoApply: false,
+      startDate: '2024-01-01',
+      endDate: '2024-01-31'
+    };
+    fixture.detectChanges();
+    tick();
+
+    const before = DateRangePicker.getInstance(inputEl(fixture));
+    // Same non-date values (fresh refs!), only dates change
+    host.directive.updateOptions({
+      locale: { format: 'YYYY-MM-DD' },
+      opens: 'left',
+      autoApply: false,
+      startDate: '2024-02-01',
+      endDate: '2024-02-28'
+    });
+    const after = DateRangePicker.getInstance(inputEl(fixture));
+
+    expect(after).toBe(before);
+    expect(after!.startDate.format('YYYY-MM-DD')).toBe('2024-02-01');
+    expect(after!.endDate.format('YYYY-MM-DD')).toBe('2024-02-28');
+  }));
+
   it('removes the picker container from the DOM on destroy', () => {
     fixture.detectChanges();
     expect(document.querySelectorAll('.daterangepicker').length).toBeGreaterThan(0);

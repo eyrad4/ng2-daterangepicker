@@ -1,6 +1,6 @@
 {
   "name": "@eyrad4/ng2-daterangepicker",
-  "version": "5.1.1",
+  "version": "5.1.7",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/eyrad4/ng2-daterangepicker"
@@ -18,5 +18,10 @@
   "dependencies": {
     "tslib": "^2.3.0"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "exports": {
+    "./assets/*": {
+      "default": "./assets/*"
+    }
+  }
 }

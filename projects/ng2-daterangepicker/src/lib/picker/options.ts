@@ -41,7 +41,9 @@ export function applyOptions(
   applyTimePickerFlags(picker, raw);
   applyFeatureFlags(picker, raw);
   rotateDaysOfWeek(picker);
-  readInitialValueFromTextInput(picker, moment);
+  if (raw.startDate == null && raw.endDate == null) {
+    readInitialValueFromTextInput(picker, moment);
+  }
   applyRanges(picker, raw, moment);
 }
 

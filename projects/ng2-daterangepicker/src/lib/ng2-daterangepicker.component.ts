@@ -11,10 +11,17 @@ import {
   untracked,
 } from "@angular/core";
 import type { Moment } from "moment";
+import * as momentNamespace from "moment";
 import { DateRangePicker } from "./picker/daterangepicker";
 import { Cleanup, on } from "./picker/dom-utils";
 import { DaterangepickerConfig } from "./ng2-daterangepicker.service";
 import type { DateRangePickerOptions, PickerOutputEvent } from "./picker/types";
+
+const moment =
+  ((momentNamespace as unknown as { default?: typeof momentNamespace }).default ??
+    momentNamespace) as typeof momentNamespace;
+
+const DATE_KEYS = new Set<keyof DateRangePickerOptions>(["startDate", "endDate"]);
 
 @Directive({
   selector: "[daterangepicker]",
@@ -23,6 +30,8 @@ import type { DateRangePickerOptions, PickerOutputEvent } from "./picker/types";
 export class DaterangepickerComponent implements AfterViewInit, OnDestroy {
   private activeRange: { start: Moment; end: Moment; label?: string } | null =
     null;
+
+  private lastAppliedOpts: Partial<DateRangePickerOptions> = {};
 
   private eventCleanups: Cleanup[] = [];
 
@@ -58,12 +67,12 @@ export class DaterangepickerComponent implements AfterViewInit, OnDestroy {
       const opts = this.options();
       const settings = this.config.settings();
       untracked(() => {
+        const hasInputs =
+          Object.keys(opts).length > 0 || Object.keys(settings).length > 0;
+        if (this.datePicker && !hasInputs) return;
+
         this.render(opts, settings);
         this.attachEvents();
-        if (this.activeRange && this.datePicker) {
-          this.datePicker.setStartDate(this.activeRange.start);
-          this.datePicker.setEndDate(this.activeRange.end);
-        }
       });
     });
   }
@@ -73,13 +82,42 @@ export class DaterangepickerComponent implements AfterViewInit, OnDestroy {
   }
 
   updateOptions(partial: Partial<DateRangePickerOptions>): void {
-    const opts = Object.assign({}, this.options(), partial);
-    this.render(opts, this.config.settings());
-    this.attachEvents();
-    if (this.activeRange && this.datePicker) {
-      this.datePicker.setStartDate(this.activeRange.start);
-      this.datePicker.setEndDate(this.activeRange.end);
+    const changed = this.diffChangedKeys(partial);
+    const dateOnly =
+      this.datePicker !== null &&
+      changed.length > 0 &&
+      changed.every((k) => DATE_KEYS.has(k as keyof DateRangePickerOptions));
+
+    if (!dateOnly) {
+      const opts = Object.assign({}, this.options(), partial);
+      this.render(opts, this.config.settings());
+      this.attachEvents();
+      return;
     }
+
+    const p = this.datePicker!;
+    if (changed.includes("startDate")) {
+      p.setStartDate(partial.startDate as string | Moment | Date);
+      this.lastAppliedOpts.startDate = partial.startDate;
+    }
+    if (changed.includes("endDate")) {
+      p.setEndDate(partial.endDate as string | Moment | Date);
+      this.lastAppliedOpts.endDate = partial.endDate;
+    }
+  }
+
+  private diffChangedKeys(partial: Partial<DateRangePickerOptions>): string[] {
+    const changed: string[] = [];
+    for (const key of Object.keys(partial)) {
+      const a = (partial as Record<string, unknown>)[key];
+      const b = (this.lastAppliedOpts as Record<string, unknown>)[key];
+      if (DATE_KEYS.has(key as keyof DateRangePickerOptions)) {
+        if (!datesEqual(a, b)) changed.push(key);
+      } else if (!valuesEqual(a, b)) {
+        changed.push(key);
+      }
+    }
+    return changed;
   }
 
   ngOnDestroy(): void {
@@ -91,6 +129,7 @@ export class DaterangepickerComponent implements AfterViewInit, OnDestroy {
     settings: DateRangePickerOptions,
   ): void {
     const targetOptions = Object.assign({}, settings, opts);
+    this.lastAppliedOpts = { ...targetOptions };
     this.destroyPicker();
 
     this.datePicker = new DateRangePicker(
@@ -107,6 +146,13 @@ export class DaterangepickerComponent implements AfterViewInit, OnDestroy {
       for (const customClass of classes) {
         this.datePicker.container.classList.add(customClass);
       }
+    }
+
+    const hasExplicitDates =
+      targetOptions.startDate != null || targetOptions.endDate != null;
+    if (this.activeRange && !hasExplicitDates) {
+      this.datePicker.setStartDate(this.activeRange.start);
+      this.datePicker.setEndDate(this.activeRange.end);
     }
 
     this.renderDaterangepicker.emit();
@@ -159,5 +205,27 @@ export class DaterangepickerComponent implements AfterViewInit, OnDestroy {
     wire("showCalendar.daterangepicker", this.showCalendarDaterangepicker);
     wire("hide.daterangepicker", this.hideDaterangepicker);
     wire("show.daterangepicker", this.showDaterangepicker);
+  }
+}
+
+function datesEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (a == null || b == null) return a === b;
+  // moment() accepts string | Date | Moment | number — all our valid date inputs
+  const ta = +(moment as unknown as (v: unknown) => Moment)(a);
+  const tb = +(moment as unknown as (v: unknown) => Moment)(b);
+  if (Number.isNaN(ta) || Number.isNaN(tb)) return false;
+  return ta === tb;
+}
+
+function valuesEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (a == null || b == null) return a === b;
+  if (typeof a === "function" || typeof b === "function") return false;
+  if (typeof a !== "object" || typeof b !== "object") return false;
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return false;
   }
 }
