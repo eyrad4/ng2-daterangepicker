@@ -1,24 +1,27 @@
 {
-  "name": "ng2-daterangepicker",
-  "version": "3.0.1",
+  "name": "@eyrad4/ng2-daterangepicker",
+  "version": "5.1.7",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/evansmwendwa/ng2-daterangepicker"
+    "url": "git+https://github.com/eyrad4/ng2-daterangepicker"
   },
   "bugs": {
-    "url": "https://github.com/evansmwendwa/ng2-daterangepicker/issues"
+    "url": "https://github.com/eyrad4/ng2-daterangepicker/issues"
   },
-  "homepage": "https://github.com/evansmwendwa/ng2-daterangepicker#readme",
+  "homepage": "https://github.com/eyrad4/ng2-daterangepicker#readme",
   "license": "MIT",
-  "dependencies": {
-    "daterangepicker": "^3.0.5"
-  },
   "peerDependencies": {
-    "@angular/common": "^9.0.1",
-    "@angular/core": "^9.0.1",
-    "tslib": "^1.10.0",
-    "jquery": "^3.4.1",
-    "@types/jquery": "^3.3.32"
+    "@angular/common": "^20.0.0",
+    "@angular/core": "^20.0.0",
+    "moment": "^2.24.0"
   },
-  "sideEffects": ["*.css"]
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "sideEffects": false,
+  "exports": {
+    "./assets/*": {
+      "default": "./assets/*"
+    }
+  }
 }

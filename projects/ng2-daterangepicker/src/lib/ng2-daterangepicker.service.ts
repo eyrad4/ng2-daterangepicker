@@ -1,13 +1,18 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
+import type { DateRangePickerOptions } from './picker/types';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DaterangepickerConfig {
+  private readonly _settings = signal<DateRangePickerOptions>({});
+  readonly settings = this._settings.asReadonly();
 
-  public settings: any;
+  setSettings(value: DateRangePickerOptions): void {
+    this._settings.set(value);
+  }
 
-  constructor() {
-    this.settings = {};
+  updateSettings(partial: Partial<DateRangePickerOptions>): void {
+    this._settings.update(s => ({ ...s, ...partial }));
   }
 }

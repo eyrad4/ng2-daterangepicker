@@ -2,15 +2,22 @@ import { TestBed } from '@angular/core/testing';
 
 import { DaterangepickerConfig } from './ng2-daterangepicker.service';
 
-describe('DaterangepickerService', () => {
-  let service: DaterangepickerConfig;
-
+describe('DaterangepickerConfig', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(DaterangepickerConfig);
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
+  it('exposes an empty settings signal on construction', () => {
+    const service = TestBed.inject(DaterangepickerConfig);
+    expect(service.settings()).toEqual({});
+  });
+
+  it('is a singleton: mutations persist across re-injections', () => {
+    const first = TestBed.inject(DaterangepickerConfig);
+    first.setSettings({ locale: { format: 'DD/MM/YYYY' } });
+
+    const second = TestBed.inject(DaterangepickerConfig);
+    expect(second).toBe(first);
+    expect(second.settings().locale!.format).toBe('DD/MM/YYYY');
   });
 });

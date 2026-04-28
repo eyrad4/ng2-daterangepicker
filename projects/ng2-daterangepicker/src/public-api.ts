@@ -4,4 +4,5 @@
 
 export * from './lib/ng2-daterangepicker.service';
 export * from './lib/ng2-daterangepicker.component';
-export * from './lib/ng2-daterangepicker.module';
+export { DateRangePicker } from './lib/picker/daterangepicker';
+export type { DateRangePickerOptions, PickerOutputEvent, PickerCallback } from './lib/picker/types';

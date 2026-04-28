@@ -3,11 +3,13 @@ ng2-daterangepicker
 
 ![Daterange Picker](https://raw.githubusercontent.com/evansmwendwa/ng2-daterangepicker/master/projects/ng2-daterangepicker/assets/screen-shot.png)
 
-This library was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.0.1.
+This library targets Angular 20+. It ships a standalone directive (`DaterangepickerComponent`) and the vendored date-range picker source as a jQuery-free TypeScript class (`DateRangePicker`). Moment.js stays as the only runtime peer dependency.
 
-## Version 3.0.0 adds support for Angular 9.0 Ivy compiler
+## Version history
 
-I have not made efforts to test earlier versions of angular with version 3.x of this package but it should still work.
+- **5.0.0** — Angular 9 → 20 upgrade. Standalone directive; `@angular/build:application` (esbuild) builder; `ng-packagr` 20; ESLint-ready. The `Daterangepicker` NgModule was removed — import `DaterangepickerComponent` directly.
+- **4.0.0** — jQuery removed. Vendored picker rewritten in TypeScript with native DOM APIs and `CustomEvent`. `moment` is the only runtime peer.
+- **3.x** — Angular 9 support, last jQuery-based release.
 
 ### Installation
 
@@ -24,8 +26,7 @@ Please note and install the following peerDependencies if necessary for your set
 
 ```json
 "peerDependencies": {
-"@types/jquery": "^3.2.12",
-"jquery": "^3.2.1",
+  "moment": "^2.24.0"
 }
 ```
 
@@ -39,31 +40,41 @@ Update tsconfig.json file in your project root to allow syntectic default import
 
 ### Usage
 
-Add JQuery and the custom css stylesheet to `angular.json`. You can customize the stylesheet as you want.
-
-Latest version does not require Bootstrap. You can also skip this and copy the contents of the css file to your stylesheets for customizations.
+Add the daterangepicker stylesheet to `angular.json`. The library no longer
+requires jQuery — only Moment.js as a peer dependency.
 
 ```json
 {
   "styles": [
     "node_modules/ng2-daterangepicker/assets/daterangepicker.css"
-  ],
-  "scripts": [
-    "node_modules/jquery/dist/jquery.min.js"
   ]
 }
 ```
 
-### Import Daterangepicker Module
-Import the `Daterangepicker` module in your application module
+### Import the standalone directive
 
-``` javascript
-import { Daterangepicker } from 'ng2-daterangepicker';
+Import `DaterangepickerComponent` directly into your standalone component's `imports` array:
 
-@NgModule({
-    imports: [Daterangepicker]
+```ts
+import { Component } from '@angular/core';
+import { DaterangepickerComponent } from 'ng2-daterangepicker';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [DaterangepickerComponent],
+  templateUrl: './app.component.html'
 })
+export class AppComponent {}
+```
 
+For NgModule-based apps (if you still have any), standalone directives are usable in `imports: []`:
+
+```ts
+@NgModule({
+  imports: [DaterangepickerComponent]
+})
+export class AppModule {}
 ```
 
 Use the `daterangepicker` directive in your component by passing in options `{}` and consuming the `selected` event. Directive can be added to inputs, buttons or any other html element.
@@ -216,10 +227,8 @@ export class AppComponent {
 
 Notes
 -----
-* This component was made in the early days of transitioning from JQuery to Angular 2.0 You might want to consider using more modern alternatives
-* Though this package still uses JQuery and Bootstrap it has been updated to support Angular 9 in 2020 (I have not made efforts to test earlier versions of Angular with version 3.0)
-* If your project is not using JQuery for other features this date picker might not be the best option for your project
-* This package ports the original [Daterangepicker](http://www.daterangepicker.com) by [Dan Grossman](https://github.com/dangrossman) for use in Angular. Angular 9 support starts with `Version 3.x` of this package
+* This package ports the original [Daterangepicker](http://www.daterangepicker.com) by [Dan Grossman](https://github.com/dangrossman) for use in Angular. The picker source is vendored under `src/lib/vendor/` and has been rewritten in TypeScript with native DOM APIs — jQuery is no longer required. Moment.js is still used for date math.
+* Angular 9 support starts with `Version 3.x` of this package.
 
 Contributing
 ------------
